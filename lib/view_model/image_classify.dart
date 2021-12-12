@@ -23,7 +23,7 @@ class ImageClassify extends GetxController {
   loadModel() async {
     await Tflite.loadModel(
       model: "assets/$model.tflite",
-      labels: "assets/$model.txt",
+      labels: "assets/model.txt",
     );
   }
 

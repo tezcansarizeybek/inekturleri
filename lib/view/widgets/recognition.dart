@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:inekturleri/view/details_page.dart';
 import 'package:inekturleri/view_model/image_classify.dart';
 
 ///Sınıflandırma sonuçlarının gözüktüğü widget
@@ -99,33 +101,65 @@ class _SonuclarState extends State<Sonuclar> {
             if (_currentRecognition.length > index) {
               return SizedBox(
                 height: 40,
-                child: Row(
-                  children: <Widget>[
-                    Container(
-                      padding: EdgeInsets.only(left: _padding, right: _padding),
-                      width: _labelWidth,
-                      child: Text(
-                        _currentRecognition[index]['label'],
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                child: InkWell(
+                  onTap: () async {
+                    try {
+                      Get.dialog(AlertDialog(
+                        content: Row(
+                          children: [
+                            const CircularProgressIndicator(),
+                            Container(
+                                margin: const EdgeInsets.only(left: 7),
+                                child: const Text("Yükleniyor...")),
+                          ],
+                        ),
+                      ));
+                      var cows = await FirebaseFirestore.instance
+                          .collection("cows")
+                          .where("name", isEqualTo: "${_currentRecognition[index]['label']}")
+                          .get();
+                      Get.back();
+                      var cow = cows.docs.first;
+                      Get.to(() => DetailsPage(
+                            info: cow,
+                          ));
+                    } catch (e) {
+                      if (Get.isDialogOpen) {
+                        Get.back();
+                      }
+                      throw Exception(e);
+                    }
+                  },
+                  child: Row(
+                    children: <Widget>[
+                      Container(
+                        padding: EdgeInsets.only(left: _padding, right: _padding),
+                        width: _labelWidth,
+                        child: Text(
+                          _currentRecognition[index]['label'] ?? "",
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      width: _barWitdth,
-                      child: LinearProgressIndicator(
-                        backgroundColor: Colors.transparent,
-                        value: _currentRecognition[index]['confidence'],
+                      SizedBox(
+                        width: _barWitdth,
+                        child: LinearProgressIndicator(
+                          backgroundColor: Colors.transparent,
+                          value: _currentRecognition[index]['confidence'] ?? 0,
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      width: _labelConfidence,
-                      child: Text(
-                        (_currentRecognition[index]['confidence'] * 100).toStringAsFixed(0) + '%',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    )
-                  ],
+                      SizedBox(
+                        width: _labelConfidence,
+                        child: Text(
+                          ((_currentRecognition[index]['confidence'] ?? 0) * 100)
+                                  .toStringAsFixed(0) +
+                              '%',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      )
+                    ],
+                  ),
                 ),
               );
             } else {

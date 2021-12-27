@@ -31,11 +31,11 @@ class CameraService {
   }
 
   //Kamera açılır ve nesne tanıma methodları çağırılır
-  Future<void> startStreaming() async {
+  Future<void> startStreaming(setRecognitions) async {
     _cameraController.startImageStream((img) async {
       if (available) {
         available = false;
-        await Get.find<ImageClassify>().classifyImage(img);
+        await Get.find<ImageClassify>().classifyImage(img, setRecognitions);
         await Future.delayed(const Duration(seconds: 1));
         available = true;
       }
